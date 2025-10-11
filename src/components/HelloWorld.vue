@@ -23,63 +23,55 @@
     </ul>
   </div>
 </template>
-<script>
-import { mapActions, mapGetters } from "vuex";
 
-export default {
-  data() {
-    return {
-      newName: "",
-      editingId: null,
-      editedName: "",
-    };
-  },
-  computed: {
-    ...mapGetters(["allEmployees"]),
-    employees() {
-      return this.allEmployees;
-    },
-  },
-  methods: {
-    ...mapActions([
-      "fetchEmployees",
-      "addEmployee",
-      "updateEmployee",
-      "deleteEmployee",
-    ]),
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
 
-    addNewEmployee() {
-      if (this.newName.trim()) {
-        this.addEmployee({ username: this.newName.trim() });
-        this.newName = "";
-      }
-    },
+const store = useStore();
 
-    remove(id) {
-      this.deleteEmployee(id);
-    },
+const newName = ref("");
+const editingId = ref(null);
+const editedName = ref("");
 
-    startEdit(emp) {
-      this.editingId = emp.id;
-      this.editedName = emp.username;
-    },
+const employees = computed(() => store.getters.allEmployees);
 
-    save(emp) {
-      if (this.editedName.trim()) {
-        this.updateEmployee({ ...emp, username: this.editedName.trim() });
-      }
-      this.cancelEdit();
-    },
+const fetchEmployees = () => store.dispatch("fetchEmployees");
+const addEmployee = (payload) => store.dispatch("addEmployee", payload);
+const updateEmployee = (payload) => store.dispatch("updateEmployee", payload);
+const deleteEmployee = (id) => store.dispatch("deleteEmployee", id);
 
-    cancelEdit() {
-      this.editingId = null;
-      this.editedName = "";
-    },
-  },
-  mounted() {
-    if (!this.employees.length) {
-      this.fetchEmployees();
-    }
-  },
+const addNewEmployee = () => {
+  if (newName.value.trim()) {
+    addEmployee({ username: newName.value.trim() });
+    newName.value = "";
+  }
 };
+
+const remove = (id) => {
+  deleteEmployee(id);
+};
+
+const startEdit = (emp) => {
+  editingId.value = emp.id;
+  editedName.value = emp.username;
+};
+
+const save = (emp) => {
+  if (editedName.value.trim()) {
+    updateEmployee({ ...emp, username: editedName.value.trim() });
+  }
+  cancelEdit();
+};
+
+const cancelEdit = () => {
+  editingId.value = null;
+  editedName.value = "";
+};
+
+onMounted(() => {
+  if (!employees.value.length) {
+    fetchEmployees();
+  }
+});
 </script>
